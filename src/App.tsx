@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { Timestamp, addDoc, collection, doc, onSnapshot, orderBy, query, serverTimestamp, updateDoc } from 'firebase/firestore';
-import { auth, db } from './firebase';
+import { auth, db, storageEnabled } from './firebase';
 import { LoginPage } from './components/LoginPage';
 import { SearchFilterBar } from './components/SearchFilterBar';
 import { Sidebar } from './components/Sidebar';
@@ -177,8 +177,8 @@ export default function App() {
       const url = await uploadIssueImage(file, activeIssue.id);
       changeDraft('imageUrls', [...activeIssue.imageUrls, url]);
       setSaveMessage('Image added. Click Save to persist issue metadata.');
-    } catch {
-      setSaveError('Image upload failed.');
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Image upload failed.');
     }
   };
 
@@ -246,6 +246,7 @@ export default function App() {
           onSave={saveIssue}
           onImagePaste={handlePasteImage}
           onRemoveImage={removeImage}
+          storageEnabled={storageEnabled}
           saving={saving}
           message={saveMessage}
           error={saveError}

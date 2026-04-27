@@ -22,6 +22,7 @@ function splitText(text: string, chunk = 1200): string[] {
 }
 
 async function imageToData(url: string): Promise<string | null> {
+  if (url.startsWith('data:image/')) return url;
   try {
     const res = await fetch(url);
     const blob = await res.blob();

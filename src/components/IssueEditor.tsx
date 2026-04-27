@@ -8,12 +8,13 @@ type Props = {
   onSave: () => Promise<void>;
   onImagePaste: (file: File) => Promise<void>;
   onRemoveImage: (url: string) => void;
+  storageEnabled: boolean;
   saving: boolean;
   message?: string | null;
   error?: string | null;
 };
 
-export function IssueEditor({ issue, onChange, onSave, onImagePaste, onRemoveImage, saving, message, error }: Props) {
+export function IssueEditor({ issue, onChange, onSave, onImagePaste, onRemoveImage, storageEnabled, saving, message, error }: Props) {
   if (!issue) {
     return <div className="editor-empty">Select an issue from the left sidebar.</div>;
   }
@@ -72,15 +73,16 @@ export function IssueEditor({ issue, onChange, onSave, onImagePaste, onRemoveIma
 
       <div>
         <h4>Attached Images</h4>
+        {!storageEnabled && <p className="muted">Storage OFF mode: images are saved inline in Firestore (recommended under 700KB each).</p>}
         <div className="image-grid">
-          {issue.imageUrls.map((url) => (
-            <div key={url} className="image-item">
-              <img src={url} alt="issue attachment" />
-              <button onClick={() => onRemoveImage(url)}>Remove</button>
-            </div>
-          ))}
-          {issue.imageUrls.length === 0 && <span className="muted">Paste image into Problem/Solution fields (Ctrl/Cmd + V).</span>}
-        </div>
+            {issue.imageUrls.map((url) => (
+              <div key={url} className="image-item">
+                <img src={url} alt="issue attachment" />
+                <button onClick={() => onRemoveImage(url)}>Remove</button>
+              </div>
+            ))}
+            {issue.imageUrls.length === 0 && <span className="muted">Paste image into Problem/Solution fields (Ctrl/Cmd + V).</span>}
+          </div>
       </div>
 
       {error && <p className="error-text">{error}</p>}
