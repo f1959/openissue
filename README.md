@@ -38,6 +38,16 @@
 
 ---
 
+
+## 1-1) 이미 Firebase 키는 코드에 넣어둠
+
+요청하신 Firebase 설정값(apiKey 등)은 이미 코드(`src/firebase.ts`)에 기본값으로 넣어두었습니다.
+그래서 **지금은 GitHub Secrets / .env를 안 넣어도 기본 접속은 됩니다.**
+
+다만 아래 2가지는 반드시 필요합니다:
+1. Firebase Authentication에서 사용자 계정 생성
+2. Firestore Rules(그리고 Storage 쓸 경우 Storage Rules) 게시
+
 ## 2) Firebase 설정 (클릭만 하면 됨)
 
 ### 2-1. 프로젝트 생성
@@ -135,7 +145,7 @@ service firebase.storage {
 
 1. 레포 화면 → **Settings**
 2. 왼쪽 메뉴 **Secrets and variables → Actions**
-3. **New repository secret** 클릭해서 아래 6개를 하나씩 추가
+3. **New repository secret** 클릭해서 아래 항목을 필요 시 추가
 
 - `VITE_FIREBASE_API_KEY`
 - `VITE_FIREBASE_AUTH_DOMAIN`
@@ -145,10 +155,11 @@ service firebase.storage {
 - `VITE_FIREBASE_APP_ID`
 - `VITE_ENABLE_STORAGE` (`true` 또는 `false`)
 
-값은 Firebase 웹앱 등록 때 받은 `firebaseConfig` 값 넣으면 됩니다.
+이 프로젝트는 Firebase 키 기본값이 코드에 들어있어서, 필수는 `VITE_ENABLE_STORAGE` 하나입니다.
 
+- 최소 권장: `VITE_ENABLE_STORAGE=false`
 - 이미지 기능 ON: `VITE_ENABLE_STORAGE=true`
-- 이미지 기능 OFF: `VITE_ENABLE_STORAGE=false`
+- 다른 `VITE_FIREBASE_*` 값은 필요하면 덮어쓰기용(선택)
 
 ### 4-3. Pages 활성화
 
