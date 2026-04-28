@@ -249,6 +249,7 @@ service firebase.storage {
 
 - 대부분 Secrets 오타입니다.
 - Actions 로그에서 어떤 `VITE_...` 값이 비었는지 확인하세요.
+- `Dependencies lock file is not found` 에러가 나면, 워크플로우가 `npm ci` 고정인지 확인하세요. 이 저장소는 lockfile 없어도 `npm install`로 진행되도록 설정되어야 합니다.
 
 ### 로그인은 되는데 데이터가 안 보여요
 
