@@ -245,6 +245,14 @@ service firebase.storage {
 
 ## 8) 트러블슈팅 (무설치 기준)
 
+### deploy 실패 시 체크리스트
+
+1. **Settings → Pages**에서 Source가 **GitHub Actions**인지 확인
+2. **Actions → Deploy to GitHub Pages**에서 실패한 실행의 **build** 로그 확인
+3. **Settings → Actions → General → Workflow permissions**가 Pages 배포를 허용하는지 확인
+4. **Settings → Secrets and variables → Actions**에서 `VITE_ENABLE_STORAGE=false` 또는 필요한 Firebase secrets 확인
+5. **Actions** 성공 후 Pages URL이 `https://f1959.github.io/openissue/`인지 확인
+
 ### 배포가 실패해요
 
 - 대부분 Secrets 오타입니다.
