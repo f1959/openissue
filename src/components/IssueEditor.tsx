@@ -1,12 +1,13 @@
-import { ClipboardEvent } from 'react';
 import { OpenIssue, SeriousLevel } from '../types';
 import { formatDateTime } from '../utils/dateFormat';
+import { appendInlineImage, extractInlineImageUrls } from '../utils/inlineImages';
+import { DocumentField } from './DocumentField';
 
 type Props = {
   issue: OpenIssue | null;
   onChange: <K extends keyof OpenIssue>(key: K, value: OpenIssue[K]) => void;
   onSave: () => Promise<void>;
-  onImagePaste: (file: File) => Promise<void>;
+  onImagePaste: (file: File) => Promise<string>;
   onRemoveImage: (url: string) => void;
   storageEnabled: boolean;
   saving: boolean;
@@ -19,14 +20,8 @@ export function IssueEditor({ issue, onChange, onSave, onImagePaste, onRemoveIma
     return <div className="editor-empty">Select an issue from the left sidebar.</div>;
   }
 
-  const handlePaste = async (event: ClipboardEvent<HTMLTextAreaElement>) => {
-    const item = Array.from(event.clipboardData.items).find((entry) => entry.type.startsWith('image/'));
-    if (!item) return;
-    event.preventDefault();
-    const file = item.getAsFile();
-    if (!file) return;
-    await onImagePaste(file);
-  };
+  const inlineImageUrls = new Set(extractInlineImageUrls(issue.problem, issue.solution));
+  const unplacedImages = issue.imageUrls.filter((url) => !inlineImageUrls.has(url));
 
   return (
     <div className="editor-card">
@@ -62,28 +57,48 @@ export function IssueEditor({ issue, onChange, onSave, onImagePaste, onRemoveIma
         <span>Updated: {formatDateTime(issue.updatedAt)}</span>
       </div>
 
-      <label className="full">
-        Problem
-        <textarea rows={8} value={issue.problem} onChange={(e) => onChange('problem', e.target.value)} onPaste={(e) => void handlePaste(e)} />
-      </label>
-      <label className="full">
-        Solution
-        <textarea rows={8} value={issue.solution} onChange={(e) => onChange('solution', e.target.value)} onPaste={(e) => void handlePaste(e)} />
-      </label>
+      <DocumentField
+        label="Problem"
+        value={issue.problem}
+        onChange={(value) => onChange('problem', value)}
+        onImagePaste={onImagePaste}
+        onRemoveImage={onRemoveImage}
+      />
+      <DocumentField
+        label="Solution"
+        value={issue.solution}
+        onChange={(value) => onChange('solution', value)}
+        onImagePaste={onImagePaste}
+        onRemoveImage={onRemoveImage}
+      />
 
-      <div>
-        <h4>Attached Images</h4>
-        {!storageEnabled && <p className="muted">Storage OFF mode: images are saved inline in Firestore (recommended under 700KB each).</p>}
-        <div className="image-grid">
-            {issue.imageUrls.map((url) => (
-              <div key={url} className="image-item">
-                <img src={url} alt="issue attachment" />
-                <button onClick={() => onRemoveImage(url)}>Remove</button>
-              </div>
-            ))}
-            {issue.imageUrls.length === 0 && <span className="muted">Paste image into Problem/Solution fields (Ctrl/Cmd + V).</span>}
+      {unplacedImages.length > 0 && (
+        <div className="unplaced-images">
+          <div className="document-heading">
+            <span>Unplaced Images</span>
           </div>
-      </div>
+          <div className="unplaced-image-list">
+            {unplacedImages.map((url) => (
+              <figure className="unplaced-image" key={url}>
+                <img src={url} alt="unplaced attachment" />
+                <div>
+                  <button type="button" onClick={() => onChange('problem', appendInlineImage(issue.problem, url))}>
+                    Add to Problem
+                  </button>
+                  <button type="button" onClick={() => onChange('solution', appendInlineImage(issue.solution, url))}>
+                    Add to Solution
+                  </button>
+                  <button type="button" onClick={() => onRemoveImage(url)}>
+                    Remove
+                  </button>
+                </div>
+              </figure>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!storageEnabled && <p className="muted compact-note">Storage OFF: keep pasted images under 700KB.</p>}
 
       {error && <p className="error-text">{error}</p>}
       {message && <p className="success-text">{message}</p>}

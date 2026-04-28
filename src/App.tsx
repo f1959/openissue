@@ -12,6 +12,7 @@ import { sortIssues } from './utils/issueSort';
 import { uploadIssueImage } from './utils/uploadImage';
 import { toExportIssueRecord } from './utils/exportModel';
 import { exportIssuesToPptx } from './utils/exportPptx';
+import { extractInlineImageUrls, removeInlineImage } from './utils/inlineImages';
 import './styles.css';
 
 function withId<T>(id: string, data: T): T & { id: string } {
@@ -96,8 +97,10 @@ export default function App() {
 
   const changeDraft = <K extends keyof OpenIssue>(key: K, value: OpenIssue[K]) => {
     if (!activeIssue) return;
-    const next = { ...activeIssue, [key]: value };
-    setDraft(next);
+    setDraft((prev) => {
+      const base = prev && prev.id === activeIssue.id ? prev : activeIssue;
+      return { ...base, [key]: value };
+    });
     setDirty(true);
     setSaveMessage(null);
     setSaveError(null);
@@ -144,6 +147,12 @@ export default function App() {
       setSaveError('Title and Problem are required.');
       return;
     }
+    const imageUrls = [
+      ...new Set([
+        ...activeIssue.imageUrls,
+        ...extractInlineImageUrls(activeIssue.problem, activeIssue.solution),
+      ]),
+    ];
     setSaving(true);
     setSaveError(null);
     try {
@@ -155,7 +164,7 @@ export default function App() {
         solution: activeIssue.solution,
         status: activeIssue.status,
         seriousLevel: activeIssue.seriousLevel,
-        imageUrls: activeIssue.imageUrls,
+        imageUrls,
         archived: activeIssue.archived,
         updatedAt: serverTimestamp(),
         updatedBy: user.email ?? '',
@@ -170,21 +179,39 @@ export default function App() {
     }
   };
 
-  const handlePasteImage = async (file: File) => {
-    if (!activeIssue) return;
+  const handlePasteImage = async (file: File): Promise<string> => {
+    if (!activeIssue) throw new Error('Select an issue before adding images.');
     setSaveMessage('Uploading image...');
     try {
       const url = await uploadIssueImage(file, activeIssue.id);
-      changeDraft('imageUrls', [...activeIssue.imageUrls, url]);
-      setSaveMessage('Image added. Click Save to persist issue metadata.');
+      setDraft((prev) => {
+        const base = prev && prev.id === activeIssue.id ? prev : activeIssue;
+        const imageUrls = base.imageUrls.includes(url) ? base.imageUrls : [...base.imageUrls, url];
+        return { ...base, imageUrls };
+      });
+      setDirty(true);
+      setSaveMessage('Image inserted. Click Save to persist.');
+      return url;
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Image upload failed.');
+      throw err;
     }
   };
 
   const removeImage = (url: string) => {
     if (!activeIssue) return;
-    changeDraft('imageUrls', activeIssue.imageUrls.filter((item) => item !== url));
+    setDraft((prev) => {
+      const base = prev && prev.id === activeIssue.id ? prev : activeIssue;
+      return {
+        ...base,
+        imageUrls: base.imageUrls.filter((item) => item !== url),
+        problem: removeInlineImage(base.problem, url),
+        solution: removeInlineImage(base.solution, url),
+      };
+    });
+    setDirty(true);
+    setSaveMessage(null);
+    setSaveError(null);
   };
 
   const openExport = () => {

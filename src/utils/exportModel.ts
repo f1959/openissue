@@ -1,5 +1,6 @@
 import { OpenIssue } from '../types';
 import { formatDateTime } from './dateFormat';
+import { extractInlineImageUrls, stripInlineImages } from './inlineImages';
 
 export type ExportIssueRecord = {
   id: string;
@@ -17,6 +18,13 @@ export type ExportIssueRecord = {
 };
 
 export function toExportIssueRecord(issue: OpenIssue): ExportIssueRecord {
+  const imageUrls = [
+    ...new Set([
+      ...issue.imageUrls,
+      ...extractInlineImageUrls(issue.problem, issue.solution),
+    ]),
+  ];
+
   return {
     id: issue.id,
     issueNo: issue.issueNo,
@@ -25,9 +33,9 @@ export function toExportIssueRecord(issue: OpenIssue): ExportIssueRecord {
     seriousLevel: issue.seriousLevel,
     raisedBy: issue.raisedBy,
     responsible: issue.responsible,
-    problem: issue.problem,
-    solution: issue.solution,
-    imageUrls: issue.imageUrls,
+    problem: stripInlineImages(issue.problem),
+    solution: stripInlineImages(issue.solution),
+    imageUrls,
     createdAt: formatDateTime(issue.createdAt),
     updatedAt: formatDateTime(issue.updatedAt),
   };
