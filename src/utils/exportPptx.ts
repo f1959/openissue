@@ -1,4 +1,3 @@
-import PptxGenJS from 'pptxgenjs';
 import type { ExportIssueRecord } from './exportModel';
 
 const statusColor = { open: 'C62828', in_progress: 'EF6C00', resolved: '2E7D32' };
@@ -37,7 +36,7 @@ async function imageToData(url: string): Promise<string | null> {
   }
 }
 
-function addFooter(slide: PptxGenJS.Slide, exportDate: string, issueNo: string, pageNo: number) {
+function addFooter(slide: any, exportDate: string, issueNo: string, pageNo: number) {
   slide.addText(`${exportDate} | ${issueNo} | Page ${pageNo}`, {
     x: 0.4,
     y: 6.95,
@@ -50,6 +49,8 @@ function addFooter(slide: PptxGenJS.Slide, exportDate: string, issueNo: string, 
 }
 
 export async function exportIssuesToPptx(records: ExportIssueRecord[]): Promise<void> {
+  const { default: PptxGenJS } = await import('pptxgenjs');
+
   const pptx = new PptxGenJS();
   pptx.layout = 'LAYOUT_WIDE';
   const exportDate = new Date().toISOString().slice(0, 10);

@@ -265,6 +265,14 @@ service firebase.storage {
 - Settings → Pages가 GitHub Actions인지 확인
 - 최근 Actions 실행이 성공(초록체크)인지 확인
 
+
+### `main.tsx` 404가 보여요
+
+- 이건 보통 GitHub Pages가 `dist` 결과물이 아니라 소스 루트를 직접 서빙할 때 생깁니다.
+- 반드시 **Settings → Pages → Source = GitHub Actions**로 설정하세요.
+- Actions의 `Deploy to GitHub Pages`가 성공(초록 체크)했는지 확인하세요.
+
+
 ---
 
 ## 9) 참고: 로컬 설치 방식은 선택사항
