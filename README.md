@@ -252,6 +252,7 @@ service firebase.storage {
 - CI는 `npm run build:ci`(vite build)로 배포 빌드를 수행합니다.
 - `Dependencies lock file is not found` 에러가 나면, 워크플로우가 `npm ci` 고정인지 확인하세요. 이 저장소는 lockfile 없어도 `npm install`로 진행되도록 설정되어야 합니다.
 - `No matching version found for pptxgenjs` 에러가 나면 `package.json`의 버전을 `^3.12.0`으로 맞췄는지 확인하세요.
+- `auth/invalid-api-key`가 뜨면 GitHub Secrets에 빈 문자열이 들어가서 기본값을 덮어쓴 경우가 많습니다. Firebase 관련 `VITE_FIREBASE_*` secret을 비우거나 삭제하고 재배포하세요.
 
 
 ### `Process completed with exit code 1`가 떠요
