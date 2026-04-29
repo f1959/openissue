@@ -9,6 +9,9 @@ export type OpenIssue = {
   title: string;
   raisedBy: string;
   responsible: string;
+  consultedBy?: string;
+  inquiryDate?: string;
+  consultDate?: string;
   problem: string;
   solution: string;
   status: IssueStatus;

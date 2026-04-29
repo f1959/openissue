@@ -245,19 +245,24 @@ service firebase.storage {
 
 ## 8) 트러블슈팅 (무설치 기준)
 
-### deploy 실패 시 체크리스트
-
-1. **Settings → Pages**에서 Source가 **GitHub Actions**인지 확인
-2. **Actions → Deploy to GitHub Pages**에서 실패한 실행의 **build** 로그 확인
-3. **Settings → Actions → General → Workflow permissions**가 Pages 배포를 허용하는지 확인
-4. **Settings → Secrets and variables → Actions**에서 `VITE_ENABLE_STORAGE=false` 또는 필요한 Firebase secrets 확인
-5. **Actions** 성공 후 Pages URL이 `https://f1959.github.io/openissue/`인지 확인
-
 ### 배포가 실패해요
 
 - 대부분 Secrets 오타입니다.
 - Actions 로그에서 어떤 `VITE_...` 값이 비었는지 확인하세요.
+- CI는 `npm run build:ci`(vite build)로 배포 빌드를 수행합니다.
 - `Dependencies lock file is not found` 에러가 나면, 워크플로우가 `npm ci` 고정인지 확인하세요. 이 저장소는 lockfile 없어도 `npm install`로 진행되도록 설정되어야 합니다.
+
+
+### `Process completed with exit code 1`가 떠요
+
+아래 순서로 확인하세요:
+1. Actions 실행 클릭 → 실패한 job 클릭 → **첫 번째 빨간 줄** 확인
+2. 실패 위치가 `Install dependencies`면 패키지 설치 오류입니다.
+3. 실패 위치가 `Build`면 프론트 빌드 오류입니다.
+4. `Settings → Actions → General → Workflow permissions`가 **Read and write permissions**인지 확인
+5. `Settings → Pages → Source`가 **GitHub Actions**인지 확인
+
+에러 로그 첫 줄만 공유해도 원인 바로 잡아드릴 수 있습니다.
 
 ### 로그인은 되는데 데이터가 안 보여요
 

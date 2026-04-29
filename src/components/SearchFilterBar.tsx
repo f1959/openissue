@@ -17,7 +17,7 @@ export function SearchFilterBar(props: Props) {
   return (
     <div className="search-panel">
       <input
-        placeholder="Search title, raised by, responsible, problem"
+        placeholder="검색: 제목 / 문의자 / 협의자 / 문의내용"
         value={props.query}
         onChange={(e) => props.onQuery(e.target.value)}
       />
@@ -44,7 +44,7 @@ export function SearchFilterBar(props: Props) {
       </div>
       <label className="archived-toggle">
         <input type="checkbox" checked={props.showArchived} onChange={(e) => props.onArchived(e.target.checked)} />
-        Show Archived
+        보관 표시
       </label>
     </div>
   );

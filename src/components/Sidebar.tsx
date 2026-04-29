@@ -25,7 +25,7 @@ export function Sidebar({ issues, selectedId, onSelect }: Props) {
           <div className="issue-title">{issue.title || '(No title)'}</div>
           <div className="issue-meta">
             <SeriousLevelBadge level={issue.seriousLevel} />
-            <span>Owner: {issue.responsible || '-'}</span>
+            <span>협의자: {issue.consultedBy || issue.responsible || '-'}</span>
           </div>
           <div className="issue-updated">Updated {formatDateTime(issue.updatedAt)}</div>
         </button>

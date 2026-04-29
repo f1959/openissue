@@ -1,13 +1,12 @@
+import { ClipboardEvent } from 'react';
 import { OpenIssue, SeriousLevel } from '../types';
 import { formatDateTime } from '../utils/dateFormat';
-import { appendInlineImage, extractInlineImageUrls } from '../utils/inlineImages';
-import { DocumentField } from './DocumentField';
 
 type Props = {
   issue: OpenIssue | null;
   onChange: <K extends keyof OpenIssue>(key: K, value: OpenIssue[K]) => void;
   onSave: () => Promise<void>;
-  onImagePaste: (file: File) => Promise<string>;
+  onImagePaste: (file: File) => Promise<void>;
   onRemoveImage: (url: string) => void;
   storageEnabled: boolean;
   saving: boolean;
@@ -20,17 +19,36 @@ export function IssueEditor({ issue, onChange, onSave, onImagePaste, onRemoveIma
     return <div className="editor-empty">Select an issue from the left sidebar.</div>;
   }
 
-  const inlineImageUrls = new Set(extractInlineImageUrls(issue.problem, issue.solution));
-  const unplacedImages = issue.imageUrls.filter((url) => !inlineImageUrls.has(url));
+  const handlePaste = async (event: ClipboardEvent<HTMLTextAreaElement>) => {
+    const item = Array.from(event.clipboardData.items).find((entry) => entry.type.startsWith('image/'));
+    if (!item) return;
+    event.preventDefault();
+    const file = item.getAsFile();
+    if (!file) return;
+    await onImagePaste(file);
+  };
 
   return (
     <div className="editor-card">
+      <div className="editor-topbar">
+        <h2>Open Issue 상세</h2>
+        <div className="editor-top-actions">
+          <label className="archive-chip">
+            <input type="checkbox" checked={issue.archived} onChange={(e) => onChange('archived', e.target.checked)} />
+            Archive
+          </label>
+          <button className="primary" onClick={() => void onSave()} disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
+        </div>
+      </div>
+
       <div className="editor-grid">
-        <label>Title<input value={issue.title} onChange={(e) => onChange('title', e.target.value)} /></label>
-        <label>Raised By<input value={issue.raisedBy} onChange={(e) => onChange('raisedBy', e.target.value)} /></label>
-        <label>Responsible<input value={issue.responsible} onChange={(e) => onChange('responsible', e.target.value)} /></label>
+        <label>제목<input value={issue.title} onChange={(e) => onChange('title', e.target.value)} /></label>
+        <label>문의자<input value={issue.raisedBy} onChange={(e) => onChange('raisedBy', e.target.value)} /></label>
+        <label>협의자<input value={issue.consultedBy ?? issue.responsible} onChange={(e) => onChange('consultedBy', e.target.value)} /></label>
+        <label>문의일<input type="date" value={issue.inquiryDate ?? ''} onChange={(e) => onChange('inquiryDate', e.target.value)} /></label>
+        <label>협의일<input type="date" value={issue.consultDate ?? ''} onChange={(e) => onChange('consultDate', e.target.value)} /></label>
         <label>
-          Status
+          상태
           <select value={issue.status} onChange={(e) => onChange('status', e.target.value as OpenIssue['status'])}>
             <option value="open">Open</option>
             <option value="in_progress">In Progress</option>
@@ -46,10 +64,6 @@ export function IssueEditor({ issue, onChange, onSave, onImagePaste, onRemoveIma
             <option value="critical">Critical</option>
           </select>
         </label>
-        <label className="checkbox-row">
-          <input type="checkbox" checked={issue.archived} onChange={(e) => onChange('archived', e.target.checked)} />
-          Archived
-        </label>
       </div>
 
       <div className="timestamps">
@@ -57,53 +71,33 @@ export function IssueEditor({ issue, onChange, onSave, onImagePaste, onRemoveIma
         <span>Updated: {formatDateTime(issue.updatedAt)}</span>
       </div>
 
-      <DocumentField
-        label="Problem"
-        value={issue.problem}
-        onChange={(value) => onChange('problem', value)}
-        onImagePaste={onImagePaste}
-        onRemoveImage={onRemoveImage}
-      />
-      <DocumentField
-        label="Solution"
-        value={issue.solution}
-        onChange={(value) => onChange('solution', value)}
-        onImagePaste={onImagePaste}
-        onRemoveImage={onRemoveImage}
-      />
+      <div className="body-split">
+        <label className="full body-pane">
+          협의 내용
+          <textarea rows={12} value={issue.solution} onChange={(e) => onChange('solution', e.target.value)} onPaste={(e) => void handlePaste(e)} />
+        </label>
+        <label className="full body-pane">
+          문의 내용
+          <textarea rows={12} value={issue.problem} onChange={(e) => onChange('problem', e.target.value)} onPaste={(e) => void handlePaste(e)} />
+        </label>
+      </div>
 
-      {unplacedImages.length > 0 && (
-        <div className="unplaced-images">
-          <div className="document-heading">
-            <span>Unplaced Images</span>
-          </div>
-          <div className="unplaced-image-list">
-            {unplacedImages.map((url) => (
-              <figure className="unplaced-image" key={url}>
-                <img src={url} alt="unplaced attachment" />
-                <div>
-                  <button type="button" onClick={() => onChange('problem', appendInlineImage(issue.problem, url))}>
-                    Add to Problem
-                  </button>
-                  <button type="button" onClick={() => onChange('solution', appendInlineImage(issue.solution, url))}>
-                    Add to Solution
-                  </button>
-                  <button type="button" onClick={() => onRemoveImage(url)}>
-                    Remove
-                  </button>
-                </div>
-              </figure>
-            ))}
-          </div>
+      <div>
+        <h4>첨부 이미지</h4>
+        {!storageEnabled && <p className="muted">Storage OFF mode: images are saved inline in Firestore (recommended under 700KB each).</p>}
+        <div className="image-grid">
+          {issue.imageUrls.map((url) => (
+            <div key={url} className="image-item">
+              <img src={url} alt="issue attachment" />
+              <button onClick={() => onRemoveImage(url)}>Remove</button>
+            </div>
+          ))}
+          {issue.imageUrls.length === 0 && <span className="muted">붙여넣기(Ctrl/Cmd + V)로 이미지 첨부.</span>}
         </div>
-      )}
-
-      {!storageEnabled && <p className="muted compact-note">Storage OFF: keep pasted images under 700KB.</p>}
+      </div>
 
       {error && <p className="error-text">{error}</p>}
       {message && <p className="success-text">{message}</p>}
-
-      <button className="primary" onClick={() => void onSave()} disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
     </div>
   );
 }

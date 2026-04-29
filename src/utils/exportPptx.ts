@@ -86,7 +86,7 @@ export async function exportIssuesToPptx(records: ExportIssueRecord[]): Promise<
       h: 5.8,
       fontSize: 10,
       border: { pt: 1, color: 'DDDDDD' },
-      fill: { color: 'FFFFFF' },
+      fill: 'FFFFFF',
       color: '111111',
     },
   );
@@ -186,7 +186,7 @@ export async function exportIssuesToPptx(records: ExportIssueRecord[]): Promise<
     }
   }
 
-  const dateSuffix = exportDate.replace(/-/g, '');
+  const dateSuffix = exportDate.replaceAll('-', '');
   const fileName = records.length === 1
     ? `open_issue_#${records[0].issueNo}_${dateSuffix}.pptx`
     : `open_issue_report_${dateSuffix}.pptx`;
